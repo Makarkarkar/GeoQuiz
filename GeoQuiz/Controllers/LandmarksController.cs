@@ -14,6 +14,7 @@ public class LandmarksController:ControllerBase
     {
         _service = service;
     }
+    
     [ProducesResponseType(404)]
     [HttpGet("{num}")]
     [EnableCors] 
@@ -21,6 +22,7 @@ public class LandmarksController:ControllerBase
     {
         return _service.GetRandomLandmarks(num);
     }
+    
     [ProducesResponseType(404)]
     [HttpGet("{id}")]
     [EnableCors] 

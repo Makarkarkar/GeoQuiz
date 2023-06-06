@@ -1,5 +1,6 @@
 using GeoQuiz;
 using GeoQuiz.Services;
+using GeoQuiz.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Cors;
@@ -13,7 +14,15 @@ builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
     );
-builder.Services.AddCors();
+builder.Services.AddCors(opt => {
+    opt.AddPolicy("CorsPolicy", policy => {
+        policy
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .WithOrigins("http://localhost:3000");
+    });
+});
 
 builder.Services.AddDbContext<GeoQuizContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("GeoQuizContext")));
@@ -21,33 +30,29 @@ builder.Services.AddDbContext<GeoQuizContext>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ILandmarkService, LandmarkService>();
+builder.Services.AddScoped<IWinnerChecker, WinnerChecker>();
+builder.Services.AddSignalR();
+
+
 
 var app = builder.Build();
-
+app.UseCors("CorsPolicy");
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "StaticFiles")),
     RequestPath = "/landmarks"
 });
-app.UseCors(builder =>
-{
-    builder.AllowAnyOrigin()
-        .AllowAnyMethod()
-        .AllowAnyHeader();
-});
+
 
 app.MapControllers();
+
+app.MapHub<LobbyHub>("/lobby");
 
 app.Run();

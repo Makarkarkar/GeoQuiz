@@ -14,8 +14,6 @@ public class LandmarkService :ILandmarkService
 
     public ICollection<Landmark> GetRandomLandmarks(int num)
     {
-        // var landmarks = _context.Database.ExecuteSqlRaw(
-        //     $"SELECT * FROM landmarks ORDER BY RANDOM() LIMIT {num}");
         var landmarks = _context.Landmarks.OrderBy(x => Guid.NewGuid()).Take(num).ToList();
         return landmarks;
     }
